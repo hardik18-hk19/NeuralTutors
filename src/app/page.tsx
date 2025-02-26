@@ -6,7 +6,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col">
       <header className="px-4 lg:px-6 h-14 flex items-center">
         <Link className="flex items-center justify-center" href="/">
-          <span className="font-bold text-xl">EduSync Pro</span>
+          <span className="font-bold text-xl">Neural Tutors</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link
@@ -43,7 +43,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="space-x-4">
-                <Link href="/dashboard">
+                <Link href="#">
                   <Button>Get Started</Button>
                 </Link>
                 <Link href="#">
