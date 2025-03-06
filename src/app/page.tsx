@@ -43,7 +43,7 @@ export default function Home() {
                 </p>
               </div>
               <div className="space-x-4">
-                <Link href="#">
+                <Link href="/auth/register">
                   <Button>Get Started</Button>
                 </Link>
                 <Link href="#">
