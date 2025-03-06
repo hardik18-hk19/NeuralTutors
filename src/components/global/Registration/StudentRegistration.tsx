@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { FormInputField } from "./FormInputField";
+import { FormInputField } from "../FormInputField";
 import {
   UserRound,
   Lock,

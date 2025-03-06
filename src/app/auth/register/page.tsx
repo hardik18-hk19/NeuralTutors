@@ -1,6 +1,6 @@
 "use client";
 
-import { RegistrationTabs } from "../../../components/global/RegistrationTabs";
+import { RegistrationTabs } from "../../../components/global/Registration/RegistrationTabs";
 
 export default function RegisterPage() {
   return (

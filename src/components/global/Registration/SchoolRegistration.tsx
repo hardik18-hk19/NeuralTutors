@@ -6,7 +6,7 @@ import * as z from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { FormInputField } from "./FormInputField";
+import { FormInputField } from "../FormInputField";
 import { School, Users, UserRound, Lock, Mail } from "lucide-react";
 
 const passwordSchema = z
