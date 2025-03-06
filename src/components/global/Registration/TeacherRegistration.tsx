@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { UserRound, Lock, Mail, IdCard, School } from "lucide-react";
+import { registerTeacher } from "@/app/actions/auth";
 
 const passwordSchema = z
   .string()
@@ -56,11 +57,38 @@ export function TeacherRegistrationForm() {
     mode: "onChange",
   });
 
-  function onSubmit(values: FormData) {
-    toast.success("Teacher registered successfully!", {
-      description: "Your account has been created.",
-    });
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      console.log("Form values:", values);
+      const formData = new FormData();
+
+      // Add all form fields except retypePassword
+      Object.entries(values).forEach(([key, value]) => {
+        if (key !== "retypePassword") {
+          formData.append(key, value);
+          console.log(`Adding to FormData: ${key} = ${value}`);
+        }
+      });
+
+      const result = await registerTeacher(formData);
+      console.log("Registration result:", result);
+
+      if (result.error) {
+        toast.error("Registration failed!", {
+          description: result.error,
+        });
+      } else {
+        toast.success("Teacher registered successfully!", {
+          description: "Your account has been created.",
+        });
+        form.reset();
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed!", {
+        description: "An unexpected error occurred.",
+      });
+    }
   }
 
   return (

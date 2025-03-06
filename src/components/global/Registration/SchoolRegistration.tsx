@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { School, Users, UserRound, Lock, Mail } from "lucide-react";
+import { registerSchool } from "@/app/actions/auth";
 
 const passwordSchema = z
   .string()
@@ -60,11 +61,38 @@ export function SchoolRegistrationForm() {
     mode: "onChange",
   });
 
-  function onSubmit(values: FormData) {
-    toast.success("School registered successfully!", {
-      description: "Your institution has been added to the system.",
-    });
-    console.log(values);
+  async function onSubmit(values: FormData) {
+    try {
+      console.log("Form values:", values);
+      const formData = new FormData();
+
+      // Add all form fields except retypePassword
+      Object.entries(values).forEach(([key, value]) => {
+        if (key !== "retypePassword") {
+          formData.append(key, value);
+          console.log(`Adding to FormData: ${key} = ${value}`);
+        }
+      });
+
+      const result = await registerSchool(formData);
+      console.log("Registration result:", result);
+
+      if (result.error) {
+        toast.error("Registration failed!", {
+          description: result.error,
+        });
+      } else if (result.success && result.data) {
+        toast.success("School registered successfully!", {
+          description: `Your institution has been added to the system. Your School ID is: ${result.data.schoolId}`,
+        });
+        form.reset();
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed!", {
+        description: "An unexpected error occurred.",
+      });
+    }
   }
 
   return (
