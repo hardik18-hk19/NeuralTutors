@@ -3,108 +3,84 @@
 import { prisma } from "@/lib/db";
 import bcrypt from "bcrypt";
 
-export async function createTestSchool() {
-  try {
-    const school = await prisma.school.create({
-      data: {
-        schoolName: "Test School",
-        schoolId: "TEST001",
-        userId: "school_test001",
-        numStudents: 100,
-        numTeachers: 10,
-        email: "test@school.com",
-        password: await bcrypt.hash("Test@123", 10),
-      },
-    });
-    return { success: true, school };
-  } catch (error) {
-    console.error("Error creating test school:", error);
-    return { error: "Failed to create test school" };
-  }
+// Types and Interfaces
+interface RegistrationResponse<T> {
+  success?: boolean;
+  error?: string;
+  data?: T;
 }
 
-export async function registerTeacher(formData: FormData) {
-  try {
-    const teacherName = formData.get("teacherName") as string;
-    const teacherId = formData.get("teacherId") as string;
-    const schoolName = formData.get("schoolName") as string;
-    const schoolId = formData.get("schoolId") as string;
-    const userId = formData.get("userId") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    console.log("Received registration data:", {
-      teacherName,
-      teacherId,
-      schoolName,
-      schoolId,
-      userId,
-      email,
-      hasPassword: !!password,
-    });
-
-    // First, validate if the school exists
-    const school = await prisma.school.findFirst({
-      where: {
-        AND: [{ schoolName: schoolName }, { schoolId: schoolId }],
-      },
-    });
-
-    console.log("School lookup result:", school ? "Found" : "Not found");
-
-    if (!school) {
-      return {
-        error: "School not found. Please verify school name and ID.",
-      };
-    }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create the teacher
-    const teacher = await prisma.teacher
-      .create({
-        data: {
-          teacherName,
-          teacherId,
-          userId,
-          email,
-          password: hashedPassword,
-          schoolId,
-          schoolName,
-        },
-      })
-      .catch((error) => {
-        console.error("Database error:", error);
-        throw error;
-      });
-
-    return {
-      success: true,
-      teacher: {
-        id: teacher.id,
-        teacherName: teacher.teacherName,
-        teacherId: teacher.teacherId,
-        email: teacher.email,
-      },
-    };
-  } catch (error) {
-    console.error("Full error details:", error);
-
-    if (error instanceof Error && "code" in error && error.code === "P2002") {
-      return {
-        error: "A teacher with this ID or email already exists.",
-      };
-    }
-
-    console.error("Error registering teacher:", error);
-    return {
-      error: "Failed to register teacher",
-    };
-  }
+interface SchoolData {
+  id: string;
+  schoolName: string;
+  schoolId: string;
+  email: string;
 }
 
-export async function registerSchool(formData: FormData) {
+interface TeacherData {
+  id: string;
+  teacherName: string;
+  teacherId: string;
+  email: string;
+}
+
+interface StudentData {
+  id: string;
+  studentName: string;
+  studentId: string;
+  email: string;
+}
+
+// Validation Functions
+async function isUserIdTaken(userId: string): Promise<boolean> {
+  const [schoolExists, teacherExists, studentExists] = await Promise.all([
+    prisma.school.findUnique({ where: { userId } }),
+    prisma.teacher.findUnique({ where: { userId } }),
+    prisma.student.findUnique({ where: { userId } }),
+  ]);
+
+  return !!(schoolExists || teacherExists || studentExists);
+}
+
+async function validateSchool(schoolName: string, schoolId: string) {
+  const school = await prisma.school.findFirst({
+    where: {
+      AND: [{ schoolName }, { schoolId }],
+    },
+  });
+
+  return school;
+}
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+function generateSchoolId(schoolName: string): string {
+  return `${schoolName.substring(0, 3).toUpperCase()}${Math.floor(
+    Math.random() * 10000
+  )
+    .toString()
+    .padStart(4, "0")}`;
+}
+
+function handleDatabaseError(error: unknown): RegistrationResponse<never> {
+  console.error("Full error details:", error);
+
+  if (error instanceof Error && "code" in error && error.code === "P2002") {
+    return {
+      error: "A unique constraint was violated (ID or email already exists).",
+    };
+  }
+
+  console.error("Database error:", error);
+  return { error: "An unexpected error occurred during registration." };
+}
+
+// Registration Functions
+export async function registerSchool(
+  formData: FormData
+): Promise<RegistrationResponse<SchoolData>> {
   try {
     const schoolName = formData.get("schoolName") as string;
     const userId = formData.get("userId") as string;
@@ -113,26 +89,15 @@ export async function registerSchool(formData: FormData) {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    console.log("Received school registration data:", {
-      schoolName,
-      userId,
-      numStudents,
-      numTeachers,
-      email,
-      hasPassword: !!password,
-    });
+    if (await isUserIdTaken(userId)) {
+      return {
+        error: "This User ID is already taken. Please choose a different one.",
+      };
+    }
 
-    // Generate a unique school ID
-    const schoolId = `${schoolName.substring(0, 3).toUpperCase()}${Math.floor(
-      Math.random() * 10000
-    )
-      .toString()
-      .padStart(4, "0")}`;
+    const schoolId = generateSchoolId(schoolName);
+    const hashedPassword = await hashPassword(password);
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create the school
     const school = await prisma.school.create({
       data: {
         schoolName,
@@ -147,7 +112,7 @@ export async function registerSchool(formData: FormData) {
 
     return {
       success: true,
-      school: {
+      data: {
         id: school.id,
         schoolName: school.schoolName,
         schoolId: school.schoolId,
@@ -155,50 +120,166 @@ export async function registerSchool(formData: FormData) {
       },
     };
   } catch (error) {
-    console.error("Full error details:", error);
-
-    if (error instanceof Error && "code" in error && error.code === "P2002") {
-      return {
-        error: "A school with this name, ID, or email already exists.",
-      };
-    }
-
-    console.error("Error registering school:", error);
-    return {
-      error: "Failed to register school",
-    };
+    return handleDatabaseError(error);
   }
 }
 
-export async function deleteTestSchool() {
+export async function registerTeacher(
+  formData: FormData
+): Promise<RegistrationResponse<TeacherData>> {
   try {
-    // First delete all teachers associated with the test school
-    await prisma.teacher.deleteMany({
-      where: {
-        schoolId: "TEST001",
-      },
-    });
+    const teacherName = formData.get("teacherName") as string;
+    const teacherId = formData.get("teacherId") as string;
+    const schoolName = formData.get("schoolName") as string;
+    const schoolId = formData.get("schoolId") as string;
+    const userId = formData.get("userId") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    // Then delete all students associated with the test school
-    await prisma.student.deleteMany({
-      where: {
-        schoolId: "TEST001",
-      },
-    });
+    if (await isUserIdTaken(userId)) {
+      return {
+        error: "This User ID is already taken. Please choose a different one.",
+      };
+    }
 
-    // Finally delete the school itself
-    const school = await prisma.school.delete({
-      where: {
-        schoolId: "TEST001",
+    const school = await validateSchool(schoolName, schoolId);
+    if (!school) {
+      return { error: "School not found. Please verify school name and ID." };
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const teacher = await prisma.teacher.create({
+      data: {
+        teacherName,
+        teacherId,
+        userId,
+        email,
+        password: hashedPassword,
+        schoolId,
+        schoolName,
       },
     });
 
     return {
       success: true,
-      message: "Test school and all related records deleted successfully",
+      data: {
+        id: teacher.id,
+        teacherName: teacher.teacherName,
+        teacherId: teacher.teacherId,
+        email: teacher.email,
+      },
     };
   } catch (error) {
-    console.error("Error deleting test school:", error);
-    return { error: "Failed to delete test school" };
+    return handleDatabaseError(error);
+  }
+}
+
+export async function registerStudent(
+  formData: FormData
+): Promise<RegistrationResponse<StudentData>> {
+  try {
+    const studentName = formData.get("studentName") as string;
+    const studentId = formData.get("studentId") as string;
+    const schoolName = formData.get("schoolName") as string;
+    const schoolId = formData.get("schoolId") as string;
+    const userId = formData.get("userId") as string;
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (await isUserIdTaken(userId)) {
+      return {
+        error: "This User ID is already taken. Please choose a different one.",
+      };
+    }
+
+    const school = await validateSchool(schoolName, schoolId);
+    if (!school) {
+      return { error: "School not found. Please verify school name and ID." };
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const student = await prisma.student.create({
+      data: {
+        studentName,
+        studentId,
+        userId,
+        email,
+        password: hashedPassword,
+        schoolId,
+        schoolName,
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        id: student.id,
+        studentName: student.studentName,
+        studentId: student.studentId,
+        email: student.email,
+      },
+    };
+  } catch (error) {
+    return handleDatabaseError(error);
+  }
+}
+
+// Test School Management
+const TEST_SCHOOL = {
+  name: "Test School",
+  id: crypto.randomUUID().substring(0, 8).toUpperCase(),
+  userId: "test_user",
+  email: "test@example.com",
+};
+
+export async function createTestSchool(): Promise<
+  RegistrationResponse<SchoolData>
+> {
+  try {
+    const school = await prisma.school.create({
+      data: {
+        schoolName: TEST_SCHOOL.name,
+        schoolId: TEST_SCHOOL.id,
+        userId: TEST_SCHOOL.userId,
+        numStudents: 100,
+        numTeachers: 10,
+        email: TEST_SCHOOL.email,
+        password: await hashPassword("Test@123"),
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        id: school.id,
+        schoolName: school.schoolName,
+        schoolId: school.schoolId,
+        email: school.email,
+      },
+    };
+  } catch (error) {
+    return handleDatabaseError(error);
+  }
+}
+
+export async function deleteTestSchool(): Promise<RegistrationResponse<never>> {
+  try {
+    await Promise.all([
+      prisma.teacher.deleteMany({ where: { schoolId: TEST_SCHOOL.id } }),
+      prisma.student.deleteMany({ where: { schoolId: TEST_SCHOOL.id } }),
+    ]);
+
+    await prisma.school.delete({
+      where: { schoolId: TEST_SCHOOL.id },
+    });
+
+    return {
+      success: true,
+      data: undefined,
+    };
+  } catch (error) {
+    return handleDatabaseError(error);
   }
 }

@@ -81,9 +81,9 @@ export function SchoolRegistrationForm() {
         toast.error("Registration failed!", {
           description: result.error,
         });
-      } else if (result.success && result.school) {
+      } else if (result.success && result.data) {
         toast.success("School registered successfully!", {
-          description: `Your institution has been added to the system. Your School ID is: ${result.school.schoolId}`,
+          description: `Your institution has been added to the system. Your School ID is: ${result.data.schoolId}`,
         });
         form.reset();
       }
