@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "./FormInputField";
-import { School, Users, UserRound, Lock, Mail } from "lucide-react";
+import { UserRound, Lock, Mail, IdCard, School } from "lucide-react";
 
 const passwordSchema = z
   .string()
@@ -22,18 +22,13 @@ const passwordSchema = z
 
 const formSchema = z
   .object({
+    teacherName: z
+      .string()
+      .min(2, "Teacher name must be at least 2 characters"),
+    teacherId: z.string().min(4, "Teacher ID must be at least 4 characters"),
     schoolName: z.string().min(2, "School name must be at least 2 characters"),
+    schoolId: z.string().min(4, "School ID must be at least 4 characters"),
     userId: z.string().min(4, "User ID must be at least 4 characters"),
-    numStudents: z
-      .string()
-      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-        message: "Please enter a valid number of students",
-      }),
-    numTeachers: z
-      .string()
-      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-        message: "Please enter a valid number of teachers",
-      }),
     email: z.string().email("Please enter a valid email address"),
     password: passwordSchema,
     retypePassword: z.string(),
@@ -45,14 +40,15 @@ const formSchema = z
 
 export type FormData = z.infer<typeof formSchema>;
 
-export function SchoolRegistrationForm() {
+export function TeacherRegistrationForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      teacherName: "",
+      teacherId: "",
       schoolName: "",
+      schoolId: "",
       userId: "",
-      numStudents: "",
-      numTeachers: "",
       email: "",
       password: "",
       retypePassword: "",
@@ -61,8 +57,8 @@ export function SchoolRegistrationForm() {
   });
 
   function onSubmit(values: FormData) {
-    toast.success("School registered successfully!", {
-      description: "Your institution has been added to the system.",
+    toast.success("Teacher registered successfully!", {
+      description: "Your account has been created.",
     });
     console.log(values);
   }
@@ -70,9 +66,9 @@ export function SchoolRegistrationForm() {
   return (
     <div className="p-6">
       <div className="space-y-2 text-center mb-8">
-        <h1 className="text-3xl font-bold">School Registration</h1>
+        <h1 className="text-3xl font-bold">Teacher Registration</h1>
         <p className="text-gray-500 dark:text-gray-400">
-          Register your institution in our system
+          Register as a teacher in our system
         </p>
       </div>
       <Form {...form}>
@@ -87,47 +83,55 @@ export function SchoolRegistrationForm() {
           className="space-y-6"
         >
           <div className="space-y-4">
-            <FormInputField
-              control={form.control}
-              name="schoolName"
-              label="School Name"
-              placeholder="Enter school name"
-              icon={<School className="h-5 w-5 text-gray-400" />}
-            />
-
-            <FormInputField
-              control={form.control}
-              name="userId"
-              label="User ID"
-              placeholder="Enter user ID"
-              icon={<UserRound className="h-5 w-5 text-gray-400" />}
-            />
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInputField
                 control={form.control}
-                name="numStudents"
-                label="Number of Students"
-                placeholder="Enter number of students"
-                type="number"
-                icon={<Users className="h-5 w-5 text-gray-400" />}
+                name="schoolName"
+                label="School Name"
+                placeholder="Enter school name"
+                icon={<School className="h-5 w-5 text-gray-400" />}
               />
 
               <FormInputField
                 control={form.control}
-                name="numTeachers"
-                label="Number of Teachers"
-                placeholder="Enter number of teachers"
-                type="number"
-                icon={<Users className="h-5 w-5 text-gray-400" />}
+                name="schoolId"
+                label="School ID"
+                placeholder="Enter school ID"
+                icon={<IdCard className="h-5 w-5 text-gray-400" />}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormInputField
+                control={form.control}
+                name="teacherName"
+                label="Teacher Name"
+                placeholder="Enter your full name"
+                icon={<UserRound className="h-5 w-5 text-gray-400" />}
+              />
+
+              <FormInputField
+                control={form.control}
+                name="teacherId"
+                label="Teacher ID"
+                placeholder="Enter teacher ID"
+                icon={<IdCard className="h-5 w-5 text-gray-400" />}
               />
             </div>
 
             <FormInputField
               control={form.control}
+              name="userId"
+              label="User ID"
+              placeholder="Create a user ID to register"
+              icon={<UserRound className="h-5 w-5 text-gray-400" />}
+            />
+
+            <FormInputField
+              control={form.control}
               name="email"
-              label="Recovery Email"
-              placeholder="Enter recovery email"
+              label="Email Address"
+              placeholder="Enter your email"
               type="email"
               icon={<Mail className="h-5 w-5 text-gray-400" />}
             />
@@ -155,7 +159,7 @@ export function SchoolRegistrationForm() {
             type="submit"
             className="w-full bg-black hover:bg-gray-800 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200"
           >
-            Register School
+            Register Teacher
           </Button>
         </form>
       </Form>

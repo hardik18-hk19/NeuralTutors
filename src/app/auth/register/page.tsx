@@ -1,11 +1,11 @@
 "use client";
 
-import { SchoolRegistrationForm } from "../../../components/global/SchoolRegistration";
+import { RegistrationTabs } from "../../../components/global/RegistrationTabs";
 
-export default function Home() {
+export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center p-4">
-      <SchoolRegistrationForm />
+      <RegistrationTabs />
     </div>
   );
 }

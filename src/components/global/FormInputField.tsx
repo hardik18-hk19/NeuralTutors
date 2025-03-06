@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Control } from "react-hook-form";
+import { Control, FieldValues, Path } from "react-hook-form";
 import {
   FormControl,
   FormField,
@@ -11,11 +11,10 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { FormData } from "./SchoolRegistration";
 
-interface FormInputFieldProps {
-  control: Control<FormData>;
-  name: keyof FormData;
+interface FormInputFieldProps<T extends FieldValues> {
+  control: Control<T>;
+  name: Path<T>;
   label: string;
   placeholder: string;
   type?: string;
@@ -23,7 +22,7 @@ interface FormInputFieldProps {
   description?: string;
 }
 
-export function FormInputField({
+export function FormInputField<T extends FieldValues>({
   control,
   name,
   label,
@@ -31,7 +30,7 @@ export function FormInputField({
   type = "text",
   icon,
   description,
-}: FormInputFieldProps) {
+}: FormInputFieldProps<T>) {
   return (
     <FormField
       control={control}
