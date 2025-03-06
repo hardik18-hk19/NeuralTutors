@@ -8,6 +8,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { FormData } from "./SchoolRegistration";
@@ -19,6 +20,7 @@ interface FormInputFieldProps {
   placeholder: string;
   type?: string;
   icon: ReactNode;
+  description?: string;
 }
 
 export function FormInputField({
@@ -28,6 +30,7 @@ export function FormInputField({
   placeholder,
   type = "text",
   icon,
+  description,
 }: FormInputFieldProps) {
   return (
     <FormField
@@ -47,6 +50,7 @@ export function FormInputField({
               />
             </div>
           </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>
       )}

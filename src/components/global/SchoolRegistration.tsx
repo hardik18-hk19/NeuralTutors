@@ -3,11 +3,23 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { FormInputField } from "./FormInputField";
 import { School, Users, UserRound, Lock, Mail } from "lucide-react";
+
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(
+    /[^A-Za-z0-9]/,
+    "Password must contain at least one special character"
+  );
 
 const formSchema = z
   .object({
@@ -24,7 +36,7 @@ const formSchema = z
         message: "Please enter a valid number of teachers",
       }),
     email: z.string().email("Please enter a valid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: passwordSchema,
     retypePassword: z.string(),
   })
   .refine((data) => data.password === data.retypePassword, {
@@ -46,9 +58,13 @@ export function SchoolRegistrationForm() {
       password: "",
       retypePassword: "",
     },
+    mode: "onChange", // Enable real-time validation
   });
 
   function onSubmit(values: FormData) {
+    toast.success("School registered successfully!", {
+      description: "Your institution has been added to the system.",
+    });
     console.log(values);
   }
 
@@ -64,7 +80,16 @@ export function SchoolRegistrationForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              if (Object.keys(errors).length > 0) {
+                toast.error("Form submission failed!", {
+                  description: "Please fix the errors before submitting.",
+                });
+              }
+            })}
+            className="space-y-6"
+          >
             <div className="space-y-4">
               <FormInputField
                 control={form.control}
