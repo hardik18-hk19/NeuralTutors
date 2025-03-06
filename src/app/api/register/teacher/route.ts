@@ -34,11 +34,11 @@ export async function POST(req: Request) {
       data: {
         teacherName,
         teacherId,
-        schoolName,
-        schoolId,
         userId,
         email,
         password: hashedPassword,
+        schoolId,
+        schoolName,
       },
     });
 
@@ -49,7 +49,6 @@ export async function POST(req: Request) {
         teacherName: teacher.teacherName,
         teacherId: teacher.teacherId,
         email: teacher.email,
-        schoolName: teacher.schoolName,
       },
     });
   } catch (error) {
