@@ -2,8 +2,20 @@
 
 import { prisma } from "@/lib/db";
 import bcrypt from "bcrypt";
+import { cookies } from "next/headers";
+import { SignJWT, jwtVerify } from "jose";
 
 // Types and Interfaces
+interface JwtPayload {
+  id: string;
+  role: "school" | "teacher" | "student";
+  schoolId?: string;
+  teacherId?: string;
+  studentId?: string;
+  reset?: boolean;
+  [key: string]: unknown;
+}
+
 interface RegistrationResponse<T> {
   success?: boolean;
   error?: string;
@@ -30,6 +42,29 @@ interface StudentData {
   studentId: string;
   email: string;
 }
+
+interface LoginResponse {
+  success?: boolean;
+  error?: string;
+  token?: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    role: "school" | "teacher" | "student";
+  };
+}
+
+interface ResetPasswordResponse {
+  success?: boolean;
+  error?: string;
+}
+
+// JWT Configuration
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key"
+);
+const JWT_EXPIRES_IN = "7d"; // 7 days for "Remember me"
 
 // Validation Functions
 async function isUserIdTaken(userId: string): Promise<boolean> {
@@ -282,4 +317,256 @@ export async function deleteTestSchool(): Promise<RegistrationResponse<never>> {
   } catch (error) {
     return handleDatabaseError(error);
   }
+}
+
+// Authentication Functions
+async function createToken(payload: JwtPayload, rememberMe: boolean = false) {
+  const token = await new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(rememberMe ? JWT_EXPIRES_IN : "1d")
+    .sign(JWT_SECRET);
+  return token;
+}
+
+async function verifyToken(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    return payload;
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    return null;
+  }
+}
+
+// Login Functions
+export async function loginSchool(formData: FormData): Promise<LoginResponse> {
+  try {
+    const schoolId = formData.get("schoolId") as string;
+    const password = formData.get("password") as string;
+    const rememberMe = formData.get("rememberMe") === "true";
+
+    const school = await prisma.school.findUnique({
+      where: { schoolId },
+    });
+
+    if (!school) {
+      return { error: "School not found" };
+    }
+
+    const isValidPassword = await bcrypt.compare(password, school.password);
+    if (!isValidPassword) {
+      return { error: "Invalid password" };
+    }
+
+    const token = await createToken(
+      {
+        id: school.id,
+        schoolId: school.schoolId,
+        role: "school",
+      },
+      rememberMe
+    );
+
+    return {
+      success: true,
+      token,
+      user: {
+        id: school.id,
+        name: school.schoolName,
+        email: school.email,
+        role: "school",
+      },
+    };
+  } catch (error) {
+    console.error("Login error:", error);
+    return { error: "Login failed" };
+  }
+}
+
+export async function loginTeacher(formData: FormData): Promise<LoginResponse> {
+  try {
+    const teacherId = formData.get("teacherId") as string;
+    const password = formData.get("password") as string;
+    const rememberMe = formData.get("rememberMe") === "true";
+
+    const teacher = await prisma.teacher.findUnique({
+      where: { teacherId },
+    });
+
+    if (!teacher) {
+      return { error: "Teacher not found" };
+    }
+
+    const isValidPassword = await bcrypt.compare(password, teacher.password);
+    if (!isValidPassword) {
+      return { error: "Invalid password" };
+    }
+
+    const token = await createToken(
+      {
+        id: teacher.id,
+        teacherId: teacher.teacherId,
+        role: "teacher",
+      },
+      rememberMe
+    );
+
+    return {
+      success: true,
+      token,
+      user: {
+        id: teacher.id,
+        name: teacher.teacherName,
+        email: teacher.email,
+        role: "teacher",
+      },
+    };
+  } catch (error) {
+    console.error("Login error:", error);
+    return { error: "Login failed" };
+  }
+}
+
+export async function loginStudent(formData: FormData): Promise<LoginResponse> {
+  try {
+    const studentId = formData.get("studentId") as string;
+    const password = formData.get("password") as string;
+    const rememberMe = formData.get("rememberMe") === "true";
+
+    const student = await prisma.student.findUnique({
+      where: { studentId },
+    });
+
+    if (!student) {
+      return { error: "Student not found" };
+    }
+
+    const isValidPassword = await bcrypt.compare(password, student.password);
+    if (!isValidPassword) {
+      return { error: "Invalid password" };
+    }
+
+    const token = await createToken(
+      {
+        id: student.id,
+        studentId: student.studentId,
+        role: "student",
+      },
+      rememberMe
+    );
+
+    return {
+      success: true,
+      token,
+      user: {
+        id: student.id,
+        name: student.studentName,
+        email: student.email,
+        role: "student",
+      },
+    };
+  } catch (error) {
+    console.error("Login error:", error);
+    return { error: "Login failed" };
+  }
+}
+
+// Password Reset Functions
+export async function requestPasswordReset(
+  email: string,
+  role: "school" | "teacher" | "student"
+): Promise<ResetPasswordResponse> {
+  try {
+    let user;
+    switch (role) {
+      case "school":
+        user = await prisma.school.findUnique({ where: { email } });
+        break;
+      case "teacher":
+        user = await prisma.teacher.findUnique({ where: { email } });
+        break;
+      case "student":
+        user = await prisma.student.findUnique({ where: { email } });
+        break;
+    }
+
+    if (!user) {
+      return { error: "User not found" };
+    }
+
+    // Generate reset token
+    await createToken(
+      {
+        id: user.id,
+        role,
+        reset: true,
+      },
+      false
+    );
+
+    // TODO: Send reset email with token
+    // For now, we'll just return success
+    return { success: true };
+  } catch (error) {
+    console.error("Password reset request error:", error);
+    return { error: "Failed to request password reset" };
+  }
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+  role: "school" | "teacher" | "student"
+): Promise<ResetPasswordResponse> {
+  try {
+    const payload = await verifyToken(token);
+    if (!payload || !payload.reset) {
+      return { error: "Invalid or expired reset token" };
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    switch (role) {
+      case "school":
+        await prisma.school.update({
+          where: { id: payload.id as string },
+          data: { password: hashedPassword },
+        });
+        break;
+      case "teacher":
+        await prisma.teacher.update({
+          where: { id: payload.id as string },
+          data: { password: hashedPassword },
+        });
+        break;
+      case "student":
+        await prisma.student.update({
+          where: { id: payload.id as string },
+          data: { password: hashedPassword },
+        });
+        break;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Password reset error:", error);
+    return { error: "Failed to reset password" };
+  }
+}
+
+// Session Management
+export async function getSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  if (!token) return null;
+
+  const payload = await verifyToken(token);
+  return payload;
+}
+
+export async function logout() {
+  const cookieStore = await cookies();
+  cookieStore.delete("token");
+  return { success: true };
 }

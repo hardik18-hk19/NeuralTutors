@@ -8,39 +8,56 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { GraduationCap, Lock } from "lucide-react";
+import { loginStudent } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   studentId: z.string().min(4, "Student ID must be at least 4 characters"),
   password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean().default(false),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 export function StudentLoginForm() {
+  const router = useRouter();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       studentId: "",
       password: "",
+      rememberMe: false,
     },
     mode: "onChange",
   });
 
   async function onSubmit(values: FormData) {
     try {
-      console.log("Form values:", values);
       const formData = new FormData();
-
       Object.entries(values).forEach(([key, value]) => {
-        formData.append(key, value);
-        console.log(`Adding to FormData: ${key} = ${value}`);
+        formData.append(key, value.toString());
       });
 
-      // TODO: Add login API call here
-      toast.success("Login successful!", {
-        description: "Welcome back!",
-      });
-      form.reset();
+      const result = await loginStudent(formData);
+
+      if (result.error) {
+        toast.error("Login failed!", {
+          description: result.error,
+        });
+      } else if (result.success && result.token) {
+        // Set the token in a cookie
+        document.cookie = `token=${result.token}; path=/; max-age=${
+          values.rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60
+        }`;
+
+        toast.success("Login successful!", {
+          description: `Welcome back, ${result.user?.name}!`,
+        });
+
+        // Redirect to dashboard
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed!", {
@@ -85,6 +102,22 @@ export function StudentLoginForm() {
               type="password"
               icon={<Lock className="h-5 w-5 text-gray-400" />}
             />
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={form.watch("rememberMe")}
+                onCheckedChange={(checked) =>
+                  form.setValue("rememberMe", checked as boolean)
+                }
+              />
+              <label
+                htmlFor="rememberMe"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Remember me
+              </label>
+            </div>
           </div>
 
           <Button
