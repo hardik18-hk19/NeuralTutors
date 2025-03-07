@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
 // Types and Interfaces
-type UserRole = "school" | "teacher" | "student";
+export type UserRole = "school" | "teacher" | "student";
 
 interface JwtPayload {
   id: string;

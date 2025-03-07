@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { Lock } from "lucide-react";
-import { resetPassword } from "@/app/actions/auth";
+import { resetPassword, type UserRole } from "@/app/actions/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const formSchema = z
@@ -61,7 +61,25 @@ export function ResetPasswordForm() {
 
   async function onSubmit(values: FormData) {
     try {
-      const result = await resetPassword(token, values.password, role);
+      if (!token) {
+        toast.error("Invalid reset link", {
+          description: "This password reset link is invalid or has expired.",
+        });
+        return;
+      }
+
+      if (!role) {
+        toast.error("Invalid reset link", {
+          description: "This password reset link is invalid or has expired.",
+        });
+        return;
+      }
+
+      const result = await resetPassword(
+        token as string,
+        values.password,
+        role as UserRole
+      );
 
       if (result.error) {
         toast.error("Password reset failed!", {
@@ -69,9 +87,9 @@ export function ResetPasswordForm() {
         });
       } else {
         toast.success("Password reset successful!", {
-          description: "You can now log in with your new password.",
+          description: "You can now login with your new password.",
         });
-        router.push("/login");
+        router.push("/auth/login");
       }
     } catch (error) {
       console.error("Password reset error:", error);
