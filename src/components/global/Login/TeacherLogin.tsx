@@ -67,10 +67,10 @@ export function TeacherLoginForm() {
   }
 
   return (
-    <div className="p-6">
-      <div className="space-y-2 text-center mb-8">
-        <h1 className="text-3xl font-bold">Teacher Login</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+    <div className="p-4 sm:p-6 md:p-8">
+      <div className="space-y-2 text-center mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold">Teacher Login</h1>
+        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
           Welcome back! Please enter your credentials
         </p>
       </div>
@@ -83,15 +83,17 @@ export function TeacherLoginForm() {
               });
             }
           })}
-          className="space-y-6"
+          className="space-y-4 sm:space-y-6"
         >
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <FormInputField
               control={form.control}
               name="teacherId"
               label="Teacher ID"
               placeholder="Enter your teacher ID"
-              icon={<UserRound className="h-5 w-5 text-gray-400" />}
+              icon={
+                <UserRound className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              }
             />
 
             <FormInputField
@@ -100,7 +102,7 @@ export function TeacherLoginForm() {
               label="Password"
               placeholder="Enter your password"
               type="password"
-              icon={<Lock className="h-5 w-5 text-gray-400" />}
+              icon={<Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />}
             />
 
             <div className="flex items-center space-x-2">
@@ -113,7 +115,7 @@ export function TeacherLoginForm() {
               />
               <label
                 htmlFor="rememberMe"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 Remember me
               </label>
@@ -122,16 +124,16 @@ export function TeacherLoginForm() {
 
           <Button
             type="submit"
-            className="w-full bg-black hover:bg-gray-800 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200"
+            className="w-full bg-black hover:bg-gray-800 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 text-sm sm:text-base"
           >
             Login
           </Button>
 
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
             <Button
               type="button"
               variant="link"
-              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-0"
               onClick={() => router.push("/auth/register")}
             >
               Don&apos;t have an account? Register
@@ -139,7 +141,7 @@ export function TeacherLoginForm() {
             <Button
               type="button"
               variant="link"
-              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-0"
               onClick={() => router.push("/auth/login")}
             >
               Forgot Password?
