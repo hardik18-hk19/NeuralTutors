@@ -34,18 +34,30 @@ export function SchoolLoginForm() {
 
   async function onSubmit(values: FormData) {
     try {
+      console.log("Form submission started with values:", {
+        ...values,
+        password: values.password ? "***" : undefined,
+      });
+
       const formData = new FormData();
       Object.entries(values).forEach(([key, value]) => {
         formData.append(key, value.toString());
+        console.log(
+          `Adding to FormData: ${key} = ${key === "password" ? "***" : value}`
+        );
       });
 
+      console.log("Calling loginSchool with formData");
       const result = await loginSchool(formData);
+      console.log("Login result:", result);
 
       if (result.error) {
+        console.error("Login failed:", result.error);
         toast.error("Login failed!", {
           description: result.error,
         });
       } else if (result.success && result.token) {
+        console.log("Login successful, setting token and redirecting");
         // Set the token in a cookie
         document.cookie = `token=${result.token}; path=/; max-age=${
           values.rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60
@@ -60,6 +72,13 @@ export function SchoolLoginForm() {
       }
     } catch (error) {
       console.error("Login error:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+        });
+      }
       toast.error("Login failed!", {
         description: "An unexpected error occurred.",
       });
