@@ -9,6 +9,7 @@ import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { UserRound, Lock, Mail, IdCard, School } from "lucide-react";
 import { registerTeacher } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 const passwordSchema = z
   .string()
@@ -56,6 +57,8 @@ export function TeacherRegistrationForm() {
     },
     mode: "onChange",
   });
+
+  const router = useRouter();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -189,6 +192,17 @@ export function TeacherRegistrationForm() {
           >
             Register Teacher
           </Button>
+
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => router.push("/auth/login")}
+            >
+              Already have an account? Login
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

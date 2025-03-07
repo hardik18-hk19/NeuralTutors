@@ -9,6 +9,7 @@ import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { School, Users, UserRound, Lock, Mail } from "lucide-react";
 import { registerSchool } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 const passwordSchema = z
   .string()
@@ -60,6 +61,8 @@ export function SchoolRegistrationForm() {
     },
     mode: "onChange",
   });
+
+  const router = useRouter();
 
   async function onSubmit(values: FormData) {
     try {
@@ -204,6 +207,17 @@ export function SchoolRegistrationForm() {
           >
             Register School
           </Button>
+
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => router.push("/auth/login")}
+            >
+              Already have an account? Login
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

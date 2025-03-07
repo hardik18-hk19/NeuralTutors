@@ -16,6 +16,7 @@ import {
   School,
   GraduationCap,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const passwordSchema = z
   .string()
@@ -63,6 +64,8 @@ export function StudentRegistrationForm() {
     },
     mode: "onChange", // Enable real-time validation
   });
+
+  const router = useRouter();
 
   function onSubmit(values: FormData) {
     toast.success("Student registered successfully!", {
@@ -172,6 +175,17 @@ export function StudentRegistrationForm() {
             >
               Register Student
             </Button>
+
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                onClick={() => router.push("/auth/login")}
+              >
+                Already have an account? Login
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>

@@ -126,6 +126,25 @@ export function TeacherLoginForm() {
           >
             Login
           </Button>
+
+          <div className="flex justify-between">
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => router.push("/auth/register")}
+            >
+              Don&apos;t have an account? Register
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => router.push("/auth/login")}
+            >
+              Forgot Password?
+            </Button>
+          </div>
         </form>
       </Form>
     </div>
