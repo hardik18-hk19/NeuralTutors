@@ -56,7 +56,7 @@ export function RequestResetForm() {
       <div className="p-6 text-center">
         <h2 className="text-2xl font-bold mb-4">Check Your Email</h2>
         <p className="text-gray-600 dark:text-gray-400">
-          We've sent password reset instructions to your email address.
+          {"We've sent password reset instructions to your email address."}
         </p>
       </div>
     );
@@ -67,8 +67,9 @@ export function RequestResetForm() {
       <div className="space-y-2 text-center mb-8">
         <h1 className="text-3xl font-bold">Reset Password</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Enter your email address and we&apos;ll send you a link to reset your
-          password.
+          {
+            "Enter your email address and we'll send you a link to reset your password."
+          }
         </p>
       </div>
       <Form {...form}>
