@@ -1,210 +1,38 @@
 "use server";
 
-import crypto from "crypto";
-import { prisma } from "@/lib/db";
-import bcrypt from "bcrypt";
 import { cookies } from "next/headers";
-import { SignJWT, jwtVerify } from "jose";
-
-// Types and Interfaces
-export type UserRole = "school" | "teacher" | "student";
-
-interface JwtPayload {
-  id: string;
-  role: UserRole;
-  schoolId?: string;
-  teacherId?: string;
-  studentId?: string;
-  reset?: boolean;
-  email?: string;
-  verificationCode?: string;
-  codeExpiry?: number;
-  verified?: boolean;
-  [key: string]: unknown;
-}
-
-interface BaseResponse {
-  success?: boolean;
-  error?: string;
-}
-
-interface RegistrationResponse<T> extends BaseResponse {
-  data?: T;
-  token?: string;
-}
-
-interface LoginResponse extends BaseResponse {
-  token?: string;
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-  };
-}
-
-interface ResetPasswordResponse extends BaseResponse {
-  token?: string;
-}
-
-interface VerificationResponse extends BaseResponse {
-  verificationCode?: string; // For development only, remove in production
-  token?: string;
-}
-
-interface SchoolData {
-  id: string;
-  schoolName: string;
-  schoolId: string;
-  email: string;
-}
-
-interface TeacherData {
-  id: string;
-  teacherName: string;
-  teacherId: string;
-  email: string;
-}
-
-interface StudentData {
-  id: string;
-  studentName: string;
-  studentId: string;
-  email: string;
-}
-
-// Configuration
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your-secret-key"
-);
-const JWT_EXPIRES_IN = "7d"; // 7 days for "Remember me"
-const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS_PER_WINDOW = 3;
-const VERIFICATION_CODE_EXPIRY = 10 * 60 * 1000; // 10 minutes
-
-// Rate limiting store
-const rateLimitStore = new Map<string, { count: number; timestamp: number }>();
-
-// Utility Functions
-async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 10);
-}
-
-function generateSchoolId(schoolName: string): string {
-  console.log("Generating school ID for:", schoolName);
-  // Remove any spaces from the school name first
-  const cleanName = schoolName.replace(/\s+/g, "");
-  const firstThree = cleanName.substring(0, 3).toUpperCase();
-  const randomNum = Math.floor(Math.random() * 10000);
-  const paddedNum = randomNum.toString().padStart(4, "0");
-  const schoolId = `${firstThree}${paddedNum}`;
-  console.log("Generated school ID:", {
-    firstThree,
-    randomNum,
-    paddedNum,
-    schoolId,
-  });
-  return schoolId;
-}
-
-function checkRateLimit(email: string): boolean {
-  const now = Date.now();
-  const userLimit = rateLimitStore.get(email);
-
-  if (!userLimit) {
-    rateLimitStore.set(email, { count: 1, timestamp: now });
-    return true;
-  }
-
-  if (now - userLimit.timestamp > RATE_LIMIT_WINDOW) {
-    rateLimitStore.set(email, { count: 1, timestamp: now });
-    return true;
-  }
-
-  if (userLimit.count >= MAX_REQUESTS_PER_WINDOW) {
-    return false;
-  }
-
-  userLimit.count++;
-  return true;
-}
-
-// Token Management
-async function createToken(payload: JwtPayload, rememberMe: boolean = false) {
-  try {
-    console.log("Creating token with payload:", {
-      ...payload,
-      password: payload.password ? "***" : undefined,
-    });
-
-    if (!payload || typeof payload !== "object") {
-      console.error("Invalid payload:", payload);
-      throw new Error("Invalid payload for token creation");
-    }
-
-    // Ensure required fields are present
-    if (!payload.id || !payload.role) {
-      console.error("Missing required fields in payload:", {
-        id: payload.id,
-        role: payload.role,
-      });
-      throw new Error("Missing required fields in token payload");
-    }
-
-    const token = await new SignJWT(payload)
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime(rememberMe ? JWT_EXPIRES_IN : "1d")
-      .sign(JWT_SECRET);
-
-    console.log("Token created successfully");
-    return token;
-  } catch (error) {
-    console.error("Token creation error:", error);
-    if (error instanceof Error) {
-      console.error("Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
-    }
-    throw new Error("Failed to create token");
-  }
-}
-
-async function verifyToken(token: string) {
-  try {
-    if (!token) {
-      throw new Error("No token provided");
-    }
-
-    const { payload } = await jwtVerify(token, JWT_SECRET);
-    if (!payload) {
-      throw new Error("Invalid token payload");
-    }
-    return payload;
-  } catch (error) {
-    console.error("Token verification failed:", error);
-    return null;
-  }
-}
-
-// Database Validation
-async function isUserIdTaken(userId: string): Promise<boolean> {
-  const [schoolExists, teacherExists, studentExists] = await Promise.all([
-    prisma.school.findUnique({ where: { userId } }),
-    prisma.teacher.findUnique({ where: { userId } }),
-    prisma.student.findUnique({ where: { userId } }),
-  ]);
-
-  return !!(schoolExists || teacherExists || studentExists);
-}
-
-async function validateSchool(schoolName: string, schoolId: string) {
-  return prisma.school.findUnique({
-    where: { schoolId },
-  });
-}
+import bcrypt from "bcrypt";
+import { prisma } from "@/lib/backend/db";
+import {
+  UserRole,
+  LoginResponse,
+  RegistrationResponse,
+  ResetPasswordResponse,
+  VerificationResponse,
+  SchoolData,
+  TeacherData,
+  StudentData,
+} from "./types";
+import {
+  hashPassword,
+  generateSchoolId,
+  checkRateLimit,
+  createToken,
+  verifyToken,
+  rateLimitStore,
+} from "./utils";
+import {
+  isUserIdTaken,
+  validateSchool,
+  findUserByEmail,
+  findUserByIdAndEmail,
+  updateUserPassword,
+} from "./db";
+import {
+  VERIFICATION_CODE_EXPIRY,
+  RATE_LIMIT_WINDOW,
+  TEST_SCHOOL,
+} from "./config";
 
 // Error Handling
 function handleDatabaseError(error: unknown): RegistrationResponse<never> {
@@ -273,7 +101,6 @@ export async function registerSchool(
     const hashedPassword = await hashPassword(password);
 
     console.log("Creating school in database with ID:", schoolId);
-    // Create the school first
     const school = await prisma.school.create({
       data: {
         schoolName,
@@ -298,17 +125,12 @@ export async function registerSchool(
       throw new Error("Failed to create school");
     }
 
-    // Create token with proper payload structure
-    const tokenPayload: JwtPayload = {
+    const token = await createToken({
       id: school.id,
       role: "school" as UserRole,
       schoolId: school.schoolId,
       email: school.email,
-    };
-
-    console.log("Creating token with payload:", tokenPayload);
-    const token = await createToken(tokenPayload);
-    console.log("Token created successfully");
+    });
 
     return {
       success: true,
@@ -435,61 +257,6 @@ export async function registerStudent(
   }
 }
 
-// Test School Management
-const TEST_SCHOOL = {
-  name: "Test School",
-  id: crypto.randomUUID().substring(0, 8).toUpperCase(),
-  userId: "test_user",
-  email: "test@example.com",
-};
-
-export async function createTestSchool(): Promise<
-  RegistrationResponse<SchoolData>
-> {
-  try {
-    const school = await prisma.school.create({
-      data: {
-        schoolName: TEST_SCHOOL.name,
-        schoolId: TEST_SCHOOL.id,
-        userId: TEST_SCHOOL.userId,
-        numStudents: 100,
-        numTeachers: 10,
-        email: TEST_SCHOOL.email,
-        password: await hashPassword("Test@123"),
-      },
-    });
-
-    return {
-      success: true,
-      data: {
-        id: school.id,
-        schoolName: school.schoolName,
-        schoolId: school.schoolId,
-        email: school.email,
-      },
-    };
-  } catch (error) {
-    return handleDatabaseError(error);
-  }
-}
-
-export async function deleteTestSchool(): Promise<RegistrationResponse<never>> {
-  try {
-    await Promise.all([
-      prisma.teacher.deleteMany({ where: { schoolId: TEST_SCHOOL.id } }),
-      prisma.student.deleteMany({ where: { schoolId: TEST_SCHOOL.id } }),
-    ]);
-
-    await prisma.school.delete({
-      where: { schoolId: TEST_SCHOOL.id },
-    });
-
-    return { success: true };
-  } catch (error) {
-    return handleDatabaseError(error);
-  }
-}
-
 // Login Functions
 export async function loginSchool(formData: FormData): Promise<LoginResponse> {
   try {
@@ -529,15 +296,14 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
 
     console.log("Password verified successfully");
 
-    const tokenPayload: JwtPayload = {
-      id: school.id,
-      schoolId: school.schoolId,
-      role: "school" as UserRole,
-    };
-
-    console.log("Creating token with payload:", tokenPayload);
-    const token = await createToken(tokenPayload, rememberMe);
-    console.log("Token created successfully");
+    const token = await createToken(
+      {
+        id: school.id,
+        schoolId: school.schoolId,
+        role: "school" as UserRole,
+      },
+      rememberMe
+    );
 
     return {
       success: true,
@@ -666,19 +432,7 @@ export async function requestPasswordReset(
       };
     }
 
-    let user;
-    switch (role) {
-      case "school":
-        user = await prisma.school.findUnique({ where: { email } });
-        break;
-      case "teacher":
-        user = await prisma.teacher.findUnique({ where: { email } });
-        break;
-      case "student":
-        user = await prisma.student.findUnique({ where: { email } });
-        break;
-    }
-
+    const user = await findUserByEmail(email, role);
     if (!user) {
       return { error: "User not found" };
     }
@@ -738,24 +492,11 @@ export async function verifyResetCode(
       return { error: "Invalid verification code" };
     }
 
-    let user;
-    switch (role) {
-      case "school":
-        user = await prisma.school.findFirst({
-          where: { id: payload.id as string, email: payload.email as string },
-        });
-        break;
-      case "teacher":
-        user = await prisma.teacher.findFirst({
-          where: { id: payload.id as string, email: payload.email as string },
-        });
-        break;
-      case "student":
-        user = await prisma.student.findFirst({
-          where: { id: payload.id as string, email: payload.email as string },
-        });
-        break;
-    }
+    const user = await findUserByIdAndEmail(
+      payload.id as string,
+      payload.email as string,
+      role
+    );
 
     if (!user) {
       return { error: "User not found or invalid reset token" };
@@ -793,51 +534,18 @@ export async function resetPassword(
       return { error: "Invalid or expired reset token" };
     }
 
-    let user;
-    switch (role) {
-      case "school":
-        user = await prisma.school.findFirst({
-          where: { id: payload.id as string, email: payload.email as string },
-        });
-        break;
-      case "teacher":
-        user = await prisma.teacher.findFirst({
-          where: { id: payload.id as string, email: payload.email as string },
-        });
-        break;
-      case "student":
-        user = await prisma.student.findFirst({
-          where: { id: payload.id as string, email: payload.email as string },
-        });
-        break;
-    }
+    const user = await findUserByIdAndEmail(
+      payload.id as string,
+      payload.email as string,
+      role
+    );
 
     if (!user) {
       return { error: "User not found or invalid reset token" };
     }
 
     const hashedPassword = await hashPassword(newPassword);
-
-    switch (role) {
-      case "school":
-        await prisma.school.update({
-          where: { id: payload.id as string },
-          data: { password: hashedPassword },
-        });
-        break;
-      case "teacher":
-        await prisma.teacher.update({
-          where: { id: payload.id as string },
-          data: { password: hashedPassword },
-        });
-        break;
-      case "student":
-        await prisma.student.update({
-          where: { id: payload.id as string },
-          data: { password: hashedPassword },
-        });
-        break;
-    }
+    await updateUserPassword(payload.id as string, hashedPassword, role);
 
     return { success: true };
   } catch (error) {
@@ -908,4 +616,39 @@ export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete("token");
   return { success: true };
+}
+
+// Test School Management
+export async function createTestSchool() {
+  try {
+    const school = await prisma.school.create({
+      data: {
+        schoolName: TEST_SCHOOL.name,
+        schoolId: TEST_SCHOOL.id,
+        userId: TEST_SCHOOL.userId,
+        email: TEST_SCHOOL.email,
+        password: await hashPassword("test123"),
+        numStudents: 100,
+        numTeachers: 10,
+      },
+    });
+
+    return { success: true, data: school };
+  } catch (error) {
+    console.error("Test school creation error:", error);
+    return { error: "Failed to create test school" };
+  }
+}
+
+export async function deleteTestSchool() {
+  try {
+    await prisma.school.delete({
+      where: { schoolId: TEST_SCHOOL.id },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Test school deletion error:", error);
+    return { error: "Failed to delete test school" };
+  }
 }

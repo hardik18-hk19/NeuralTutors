@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { Key, RefreshCw } from "lucide-react";
-import { verifyResetCode, resendVerificationCode } from "@/app/actions/auth";
+import { verifyResetCode, resendVerificationCode } from "@/lib/backend/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 

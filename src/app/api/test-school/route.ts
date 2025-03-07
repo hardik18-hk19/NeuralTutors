@@ -1,4 +1,4 @@
-import { createTestSchool, deleteTestSchool } from "@/app/actions/auth";
+import { createTestSchool, deleteTestSchool } from "@/lib/backend/auth";
 import { NextResponse } from "next/server";
 
 export async function POST() {

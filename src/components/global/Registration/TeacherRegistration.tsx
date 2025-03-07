@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { UserRound, Lock, Mail, IdCard, School } from "lucide-react";
-import { registerTeacher } from "@/app/actions/auth";
+import { registerTeacher } from "@/lib/backend/auth";
 import { useRouter } from "next/navigation";
 
 const passwordSchema = z
