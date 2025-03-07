@@ -9,6 +9,7 @@ import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { School, Users, UserRound, Lock, Mail } from "lucide-react";
 import { registerSchool } from "@/app/actions/auth";
+import { useRouter } from "next/navigation";
 
 const passwordSchema = z
   .string()
@@ -61,27 +62,41 @@ export function SchoolRegistrationForm() {
     mode: "onChange",
   });
 
+  const router = useRouter();
+
   async function onSubmit(values: FormData) {
     try {
-      console.log("Form values:", values);
+      console.log("Form submission started with values:", {
+        ...values,
+        password: values.password ? "***" : undefined,
+        retypePassword: values.retypePassword ? "***" : undefined,
+      });
+
       const formData = new FormData();
 
       // Add all form fields except retypePassword
       Object.entries(values).forEach(([key, value]) => {
         if (key !== "retypePassword") {
-          formData.append(key, value);
-          console.log(`Adding to FormData: ${key} = ${value}`);
+          formData.append(key, value.toString());
+          console.log(
+            `Adding to FormData: ${key} = ${
+              key.includes("password") ? "***" : value
+            }`
+          );
         }
       });
 
+      console.log("Calling registerSchool with formData");
       const result = await registerSchool(formData);
       console.log("Registration result:", result);
 
       if (result.error) {
+        console.error("Registration failed:", result.error);
         toast.error("Registration failed!", {
           description: result.error,
         });
       } else if (result.success && result.data) {
+        console.log("Registration successful:", result.data);
         toast.success("School registered successfully!", {
           description: `Your institution has been added to the system. Your School ID is: ${result.data.schoolId}`,
         });
@@ -89,6 +104,13 @@ export function SchoolRegistrationForm() {
       }
     } catch (error) {
       console.error("Registration error:", error);
+      if (error instanceof Error) {
+        console.error("Error details:", {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+        });
+      }
       toast.error("Registration failed!", {
         description: "An unexpected error occurred.",
       });
@@ -185,6 +207,17 @@ export function SchoolRegistrationForm() {
           >
             Register School
           </Button>
+
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => router.push("/auth/login")}
+            >
+              Already have an account? Login
+            </Button>
+          </div>
         </form>
       </Form>
     </div>
