@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { Mail } from "lucide-react";
-import { requestPasswordReset } from "@/app/actions/auth";
+import { requestPasswordReset } from "@/lib/backend/auth";
 import { useState } from "react";
 
 const formSchema = z.object({

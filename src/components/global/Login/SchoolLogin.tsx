@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { School, Lock } from "lucide-react";
-import { loginSchool } from "@/app/actions/auth";
+import { loginSchool } from "@/lib/backend/auth";
 import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 

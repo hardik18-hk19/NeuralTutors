@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma } from "./backend/db";
 
 export async function validateSchool(schoolName: string, schoolId: string) {
   try {

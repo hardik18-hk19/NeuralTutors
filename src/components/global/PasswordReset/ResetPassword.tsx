@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FormInputField } from "../FormInputField";
 import { Lock } from "lucide-react";
-import { resetPassword, type UserRole } from "@/app/actions/auth";
+import { resetPassword } from "@/lib/backend/auth";
+import { type UserRole } from "@/lib/backend/types";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const formSchema = z
