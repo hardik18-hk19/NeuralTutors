@@ -30,6 +30,7 @@ export interface LoginResponse extends BaseResponse {
     id: string;
     name: string;
     email: string;
+    userId: string;
     role: UserRole;
   };
 }

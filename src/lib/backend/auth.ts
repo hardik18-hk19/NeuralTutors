@@ -300,6 +300,7 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
       {
         id: school.id,
         schoolId: school.schoolId,
+        userId: school.userId,
         role: "school" as UserRole,
       },
       rememberMe
@@ -312,6 +313,7 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
         id: school.id,
         name: school.schoolName,
         email: school.email,
+        userId: school.userId,
         role: "school",
       },
     };
@@ -351,6 +353,7 @@ export async function loginTeacher(formData: FormData): Promise<LoginResponse> {
       {
         id: teacher.id,
         teacherId: teacher.teacherId,
+        userId: teacher.userId,
         role: "teacher" as UserRole,
       },
       rememberMe
@@ -363,6 +366,7 @@ export async function loginTeacher(formData: FormData): Promise<LoginResponse> {
         id: teacher.id,
         name: teacher.teacherName,
         email: teacher.email,
+        userId: teacher.userId,
         role: "teacher",
       },
     };
@@ -395,6 +399,7 @@ export async function loginStudent(formData: FormData): Promise<LoginResponse> {
       {
         id: student.id,
         studentId: student.studentId,
+        userId: student.userId,
         role: "student" as UserRole,
       },
       rememberMe
@@ -407,6 +412,7 @@ export async function loginStudent(formData: FormData): Promise<LoginResponse> {
         id: student.id,
         name: student.studentName,
         email: student.email,
+        userId: student.userId,
         role: "student",
       },
     };
