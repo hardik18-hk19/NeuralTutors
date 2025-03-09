@@ -300,6 +300,7 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
       {
         id: school.id,
         schoolId: school.schoolId,
+        userId: school.userId,
         role: "school" as UserRole,
       },
       rememberMe
@@ -312,6 +313,7 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
         id: school.id,
         name: school.schoolName,
         email: school.email,
+        userId: school.userId,
         role: "school",
       },
     };

@@ -86,31 +86,23 @@ export function SchoolLoginForm() {
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8">
-      <div className="space-y-2 text-center mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold">School Login</h1>
-        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
-          Welcome back! Please enter your credentials
+    <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <h2 className="text-2xl font-bold tracking-tight">School Login</h2>
+        <p className="text-gray-400 text-sm">
+          Enter your credentials to access your school dashboard
         </p>
       </div>
+
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            if (Object.keys(errors).length > 0) {
-              toast.error("Form submission failed!", {
-                description: "Please fix the errors before submitting.",
-              });
-            }
-          })}
-          className="space-y-4 sm:space-y-6"
-        >
-          <div className="space-y-3 sm:space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-4">
             <FormInputField
               control={form.control}
               name="schoolId"
               label="School ID"
               placeholder="Enter your school ID"
-              icon={<School className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />}
+              icon={<School className="h-5 w-5 text-gray-400" />}
             />
 
             <FormInputField
@@ -119,38 +111,40 @@ export function SchoolLoginForm() {
               label="Password"
               placeholder="Enter your password"
               type="password"
-              icon={<Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />}
+              icon={<Lock className="h-5 w-5 text-gray-400" />}
             />
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={form.watch("rememberMe")}
-                onCheckedChange={(checked) =>
-                  form.setValue("rememberMe", checked as boolean)
-                }
-              />
-              <label
-                htmlFor="rememberMe"
-                className="text-xs sm:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Remember me
-              </label>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={form.watch("rememberMe")}
+                  onCheckedChange={(checked) =>
+                    form.setValue("rememberMe", checked as boolean)
+                  }
+                />
+                <label
+                  htmlFor="rememberMe"
+                  className="text-sm font-medium text-gray-300"
+                >
+                  Remember me
+                </label>
+              </div>
             </div>
           </div>
 
           <Button
             type="submit"
-            className="w-full bg-black hover:bg-gray-800 text-white dark:bg-white dark:text-black dark:hover:bg-gray-200 text-sm sm:text-base"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-5 rounded-lg text-base font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
           >
-            Login
+            Sign In
           </Button>
 
-          <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-0">
+          <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-0">
             <Button
               type="button"
               variant="link"
-              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-0"
+              className="text-sm text-gray-400 hover:text-gray-300"
               onClick={() => router.push("/auth/register")}
             >
               Don&apos;t have an account? Register
@@ -158,8 +152,8 @@ export function SchoolLoginForm() {
             <Button
               type="button"
               variant="link"
-              className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-0"
-              onClick={() => router.push("/auth/login")}
+              className="text-sm text-gray-400 hover:text-gray-300"
+              onClick={() => router.push("/auth/reset-password")}
             >
               Forgot Password?
             </Button>

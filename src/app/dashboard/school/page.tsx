@@ -19,6 +19,7 @@ import { format } from "date-fns";
 interface SchoolData {
   schoolName: string;
   schoolId: string;
+  userId: string;
 }
 
 interface EnhancedTeacherData extends TeacherData {
@@ -109,9 +110,14 @@ export default function SchoolDashboard() {
         </div>
         <div>
           <h1 className="text-3xl font-bold">{school?.schoolName}</h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            ID: {school?.schoolId}
-          </p>
+          <div className="space-y-1">
+            <p className="text-gray-500 dark:text-gray-400">
+              School ID: {school?.schoolId}
+            </p>
+            <p className="text-gray-500 dark:text-gray-400">
+              User ID: {school?.userId}
+            </p>
+          </div>
         </div>
       </div>
 
