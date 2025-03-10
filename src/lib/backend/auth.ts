@@ -106,6 +106,7 @@ export async function registerSchool(
         schoolName,
         schoolId,
         userId,
+        username: userId,
         numStudents,
         numTeachers,
         email,
@@ -130,6 +131,7 @@ export async function registerSchool(
       role: "school" as UserRole,
       schoolId: school.schoolId,
       email: school.email,
+      username: school.username,
     });
 
     return {
@@ -140,6 +142,7 @@ export async function registerSchool(
         schoolName: school.schoolName,
         schoolId: school.schoolId,
         email: school.email,
+        username: school.username,
       },
     };
   } catch (error) {
@@ -185,6 +188,7 @@ export async function registerTeacher(
         teacherName,
         teacherId,
         userId,
+        username: userId,
         email,
         password: hashedPassword,
         schoolId,
@@ -199,6 +203,7 @@ export async function registerTeacher(
         teacherName: teacher.teacherName,
         teacherId: teacher.teacherId,
         email: teacher.email,
+        username: teacher.username,
       },
     };
   } catch (error) {
@@ -236,6 +241,7 @@ export async function registerStudent(
         studentName,
         studentId,
         userId,
+        username: userId,
         email,
         password: hashedPassword,
         schoolId,
@@ -250,6 +256,7 @@ export async function registerStudent(
         studentName: student.studentName,
         studentId: student.studentId,
         email: student.email,
+        username: student.username,
       },
     };
   } catch (error) {
@@ -300,7 +307,7 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
       {
         id: school.id,
         schoolId: school.schoolId,
-        userId: school.userId,
+        username: school.username,
         role: "school" as UserRole,
       },
       rememberMe
@@ -313,8 +320,9 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
         id: school.id,
         name: school.schoolName,
         email: school.email,
-        userId: school.userId,
+        username: school.username,
         role: "school",
+        dashboardUrl: `/dashboard/admin/${school.schoolId}`,
       },
     };
   } catch (error) {
@@ -353,7 +361,7 @@ export async function loginTeacher(formData: FormData): Promise<LoginResponse> {
       {
         id: teacher.id,
         teacherId: teacher.teacherId,
-        userId: teacher.userId,
+        username: teacher.username,
         role: "teacher" as UserRole,
       },
       rememberMe
@@ -366,8 +374,9 @@ export async function loginTeacher(formData: FormData): Promise<LoginResponse> {
         id: teacher.id,
         name: teacher.teacherName,
         email: teacher.email,
-        userId: teacher.userId,
+        username: teacher.username,
         role: "teacher",
+        dashboardUrl: `/dashboard/u/${teacher.teacherId}`,
       },
     };
   } catch (error) {
@@ -399,7 +408,7 @@ export async function loginStudent(formData: FormData): Promise<LoginResponse> {
       {
         id: student.id,
         studentId: student.studentId,
-        userId: student.userId,
+        username: student.username,
         role: "student" as UserRole,
       },
       rememberMe
@@ -412,8 +421,9 @@ export async function loginStudent(formData: FormData): Promise<LoginResponse> {
         id: student.id,
         name: student.studentName,
         email: student.email,
-        userId: student.userId,
+        username: student.username,
         role: "student",
+        dashboardUrl: `/dashboard/stud/${student.studentId}`,
       },
     };
   } catch (error) {
@@ -455,6 +465,7 @@ export async function requestPasswordReset(
         reset: true,
         verificationCode,
         codeExpiry: Date.now() + VERIFICATION_CODE_EXPIRY,
+        username: user.username || user.email,
       },
       false
     );
@@ -515,6 +526,7 @@ export async function verifyResetCode(
         role,
         reset: true,
         verified: true,
+        username: user.username || user.email,
       },
       false
     );
@@ -593,6 +605,7 @@ export async function resendVerificationCode(
         reset: true,
         verificationCode,
         codeExpiry: Date.now() + VERIFICATION_CODE_EXPIRY,
+        username: payload.email as string,
       },
       false
     );
@@ -632,6 +645,7 @@ export async function createTestSchool() {
         schoolName: TEST_SCHOOL.name,
         schoolId: TEST_SCHOOL.id,
         userId: TEST_SCHOOL.userId,
+        username: TEST_SCHOOL.userId,
         email: TEST_SCHOOL.email,
         password: await hashPassword("test123"),
         numStudents: 100,

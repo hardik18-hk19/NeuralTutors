@@ -6,6 +6,7 @@ export interface JwtPayload {
   schoolId?: string;
   teacherId?: string;
   studentId?: string;
+  username: string;
   reset?: boolean;
   email?: string;
   verificationCode?: string;
@@ -30,8 +31,9 @@ export interface LoginResponse extends BaseResponse {
     id: string;
     name: string;
     email: string;
-    userId: string;
+    username: string;
     role: UserRole;
+    dashboardUrl: string;
   };
 }
 
@@ -49,6 +51,7 @@ export interface SchoolData {
   schoolName: string;
   schoolId: string;
   email: string;
+  username: string;
 }
 
 export interface TeacherData {
@@ -56,6 +59,7 @@ export interface TeacherData {
   teacherName: string;
   teacherId: string;
   email: string;
+  username: string;
 }
 
 export interface StudentData {
@@ -63,4 +67,5 @@ export interface StudentData {
   studentName: string;
   studentId: string;
   email: string;
+  username: string;
 }
