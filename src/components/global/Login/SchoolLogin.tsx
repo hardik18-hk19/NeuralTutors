@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  schoolId: z.string().min(4, "School ID must be at least 4 characters"),
+  username: z.string().min(4, "Username must be at least 4 characters"),
   password: z.string().min(1, "Password is required"),
   rememberMe: z.boolean().default(false),
 });
@@ -25,7 +25,7 @@ export function SchoolLoginForm() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      schoolId: "",
+      username: "",
       password: "",
       rememberMe: false,
     },
@@ -39,16 +39,8 @@ export function SchoolLoginForm() {
         password: values.password ? "***" : undefined,
       });
 
-      const formData = new FormData();
-      Object.entries(values).forEach(([key, value]) => {
-        formData.append(key, value.toString());
-        console.log(
-          `Adding to FormData: ${key} = ${key === "password" ? "***" : value}`
-        );
-      });
-
       console.log("Calling loginSchool with formData");
-      const result = await loginSchool(formData);
+      const result = await loginSchool(values.username, values.password);
       console.log("Login result:", result);
 
       if (result.error) {
@@ -99,9 +91,9 @@ export function SchoolLoginForm() {
           <div className="space-y-4">
             <FormInputField
               control={form.control}
-              name="schoolId"
-              label="School ID"
-              placeholder="Enter your school ID"
+              name="username"
+              label="Username"
+              placeholder="Enter your username"
               icon={<School className="h-5 w-5 text-gray-400" />}
             />
 

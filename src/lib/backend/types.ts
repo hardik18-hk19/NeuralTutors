@@ -1,12 +1,11 @@
 export type UserRole = "school" | "teacher" | "student";
 
 export interface JwtPayload {
-  id: string;
+  username: string;
   role: UserRole;
   schoolId?: string;
   teacherId?: string;
   studentId?: string;
-  username: string;
   reset?: boolean;
   email?: string;
   verificationCode?: string;
@@ -27,13 +26,14 @@ export interface RegistrationResponse<T> extends BaseResponse {
 
 export interface LoginResponse extends BaseResponse {
   token?: string;
-  user?: {
+  user: {
     id: string;
     name: string;
-    email: string;
     username: string;
+    email: string;
     role: UserRole;
-    dashboardUrl: string;
+    schoolId?: string;
+    dashboardUrl?: string;
   };
 }
 
@@ -68,4 +68,32 @@ export interface StudentData {
   studentId: string;
   email: string;
   username: string;
+}
+
+export interface RegisterSchoolRequest {
+  schoolName: string;
+  schoolId: string;
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterTeacherRequest {
+  teacherName: string;
+  teacherId: string;
+  username: string;
+  email: string;
+  password: string;
+  schoolName: string;
+  schoolId: string;
+}
+
+export interface RegisterStudentRequest {
+  studentName: string;
+  studentId: string;
+  username: string;
+  email: string;
+  password: string;
+  schoolName: string;
+  schoolId: string;
 }

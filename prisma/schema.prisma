@@ -17,7 +17,6 @@ model School {
     updatedAt   DateTime  @updatedAt
     schoolName  String
     schoolId    String    @unique
-    userId      String    @unique
     username    String    @unique
     numStudents Int
     numTeachers Int
@@ -36,7 +35,6 @@ model Teacher {
     updatedAt   DateTime @updatedAt
     teacherName String
     teacherId   String   @unique
-    userId      String   @unique
     username    String   @unique
     email       String   @unique
     password    String
@@ -53,7 +51,6 @@ model Student {
     updatedAt   DateTime @updatedAt
     studentName String
     studentId   String   @unique
-    userId      String   @unique
     username    String   @unique
     email       String   @unique
     password    String

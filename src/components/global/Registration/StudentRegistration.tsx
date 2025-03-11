@@ -37,7 +37,7 @@ const formSchema = z
     studentId: z.string().min(4, "Student ID must be at least 4 characters"),
     schoolName: z.string().min(2, "School name must be at least 2 characters"),
     schoolId: z.string().min(4, "School ID must be at least 4 characters"),
-    userId: z.string().min(4, "User ID must be at least 4 characters"),
+    username: z.string().min(4, "Username must be at least 4 characters"),
     email: z.string().email("Please enter a valid email address"),
     password: passwordSchema,
     retypePassword: z.string(),
@@ -57,7 +57,7 @@ export function StudentRegistrationForm() {
       studentId: "",
       schoolName: "",
       schoolId: "",
-      userId: "",
+      username: "",
       email: "",
       password: "",
       retypePassword: "",
@@ -135,9 +135,9 @@ export function StudentRegistrationForm() {
 
               <FormInputField
                 control={form.control}
-                name="userId"
-                label="User ID"
-                placeholder="Create a user ID to register"
+                name="username"
+                label="Username"
+                placeholder="Choose a username"
                 icon={<UserRound className="h-5 w-5 text-gray-400" />}
               />
 

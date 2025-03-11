@@ -25,7 +25,7 @@ const passwordSchema = z
 const formSchema = z
   .object({
     schoolName: z.string().min(2, "School name must be at least 2 characters"),
-    userId: z.string().min(4, "User ID must be at least 4 characters"),
+    username: z.string().min(4, "Username must be at least 4 characters"),
     numStudents: z
       .string()
       .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
@@ -52,7 +52,7 @@ export function SchoolRegistrationForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       schoolName: "",
-      userId: "",
+      username: "",
       numStudents: "",
       numTeachers: "",
       email: "",
@@ -147,9 +147,9 @@ export function SchoolRegistrationForm() {
 
             <FormInputField
               control={form.control}
-              name="userId"
-              label="User ID"
-              placeholder="Enter user ID"
+              name="username"
+              label="Username"
+              placeholder="Choose a username"
               icon={<UserRound className="h-5 w-5 text-gray-400" />}
             />
 

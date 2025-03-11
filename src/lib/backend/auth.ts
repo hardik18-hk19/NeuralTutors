@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/backend/db";
 import {
   UserRole,
@@ -33,6 +33,8 @@ import {
   RATE_LIMIT_WINDOW,
   TEST_SCHOOL,
 } from "./config";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "./config";
 
 // Error Handling
 function handleDatabaseError(error: unknown): RegistrationResponse<never> {
@@ -265,27 +267,20 @@ export async function registerStudent(
 }
 
 // Login Functions
-export async function loginSchool(formData: FormData): Promise<LoginResponse> {
+export async function loginSchool(
+  username: string,
+  password: string
+): Promise<LoginResponse> {
   try {
     console.log("Starting school login process...");
 
-    const schoolId = formData.get("schoolId") as string;
-    const password = formData.get("password") as string;
-    const rememberMe = formData.get("rememberMe") === "true";
-
-    console.log("Login attempt with:", {
-      schoolId,
-      password: password ? "***" : undefined,
-      rememberMe,
-    });
-
     const school = await prisma.school.findUnique({
-      where: { schoolId },
+      where: { username },
     });
 
     if (!school) {
-      console.log("School not found with ID:", schoolId);
-      return { error: "School not found" };
+      console.log("School not found with username:", username);
+      throw new Error("Invalid username or password");
     }
 
     console.log("School found:", {
@@ -295,22 +290,22 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
       email: school.email,
     });
 
-    const isValidPassword = await bcrypt.compare(password, school.password);
-    if (!isValidPassword) {
-      console.log("Invalid password for school:", schoolId);
-      return { error: "Invalid password" };
+    const isValid = await bcrypt.compare(password, school.password);
+    if (!isValid) {
+      console.log("Invalid password for school:", username);
+      throw new Error("Invalid username or password");
     }
 
     console.log("Password verified successfully");
 
-    const token = await createToken(
+    const token = jwt.sign(
       {
-        id: school.id,
-        schoolId: school.schoolId,
         username: school.username,
         role: "school" as UserRole,
+        schoolId: school.schoolId,
       },
-      rememberMe
+      Buffer.from(JWT_SECRET),
+      { expiresIn: "24h" }
     );
 
     return {
@@ -321,7 +316,8 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
         name: school.schoolName,
         email: school.email,
         username: school.username,
-        role: "school",
+        role: "school" as UserRole,
+        schoolId: school.schoolId,
         dashboardUrl: `/dashboard/admin/${school.schoolId}`,
       },
     };
@@ -334,37 +330,59 @@ export async function loginSchool(formData: FormData): Promise<LoginResponse> {
         name: error.name,
       });
     }
-    return { error: "Login failed" };
+    return {
+      error: "Login failed",
+      user: {
+        id: "",
+        name: "",
+        username: "",
+        email: "",
+        role: "school",
+        schoolId: "",
+      },
+    };
   }
 }
 
-export async function loginTeacher(formData: FormData): Promise<LoginResponse> {
+export async function loginTeacher(
+  username: string,
+  password: string
+): Promise<LoginResponse> {
   try {
-    const teacherId = formData.get("teacherId") as string;
-    const password = formData.get("password") as string;
-    const rememberMe = formData.get("rememberMe") === "true";
+    console.log("Starting teacher login process...");
 
     const teacher = await prisma.teacher.findUnique({
-      where: { teacherId },
+      where: { username },
     });
 
     if (!teacher) {
-      return { error: "Teacher not found" };
+      console.log("Teacher not found with username:", username);
+      throw new Error("Invalid username or password");
     }
 
-    const isValidPassword = await bcrypt.compare(password, teacher.password);
-    if (!isValidPassword) {
-      return { error: "Invalid password" };
+    console.log("Teacher found:", {
+      id: teacher.id,
+      teacherName: teacher.teacherName,
+      teacherId: teacher.teacherId,
+      email: teacher.email,
+    });
+
+    const isValid = await bcrypt.compare(password, teacher.password);
+    if (!isValid) {
+      console.log("Invalid password for teacher:", username);
+      throw new Error("Invalid username or password");
     }
 
-    const token = await createToken(
+    console.log("Password verified successfully");
+
+    const token = jwt.sign(
       {
-        id: teacher.id,
-        teacherId: teacher.teacherId,
         username: teacher.username,
         role: "teacher" as UserRole,
+        schoolId: teacher.schoolId,
       },
-      rememberMe
+      Buffer.from(JWT_SECRET),
+      { expiresIn: "24h" }
     );
 
     return {
@@ -375,43 +393,66 @@ export async function loginTeacher(formData: FormData): Promise<LoginResponse> {
         name: teacher.teacherName,
         email: teacher.email,
         username: teacher.username,
-        role: "teacher",
+        role: "teacher" as UserRole,
+        schoolId: teacher.schoolId,
         dashboardUrl: `/dashboard/u/${teacher.teacherId}`,
       },
     };
   } catch (error) {
     console.error("Login error:", error);
-    return { error: "Login failed" };
+    return {
+      error: "Login failed",
+      user: {
+        id: "",
+        name: "",
+        username: "",
+        email: "",
+        role: "teacher",
+        schoolId: "",
+      },
+    };
   }
 }
 
-export async function loginStudent(formData: FormData): Promise<LoginResponse> {
+export async function loginStudent(
+  username: string,
+  password: string
+): Promise<LoginResponse> {
   try {
-    const studentId = formData.get("studentId") as string;
-    const password = formData.get("password") as string;
-    const rememberMe = formData.get("rememberMe") === "true";
+    console.log("Starting student login process...");
 
     const student = await prisma.student.findUnique({
-      where: { studentId },
+      where: { username },
     });
 
     if (!student) {
-      return { error: "Student not found" };
+      console.log("Student not found with username:", username);
+      throw new Error("Invalid username or password");
     }
 
-    const isValidPassword = await bcrypt.compare(password, student.password);
-    if (!isValidPassword) {
-      return { error: "Invalid password" };
+    console.log("Student found:", {
+      id: student.id,
+      studentName: student.studentName,
+      studentId: student.studentId,
+      email: student.email,
+    });
+
+    const isValid = await bcrypt.compare(password, student.password);
+    if (!isValid) {
+      console.log("Invalid password for student:", username);
+      throw new Error("Invalid username or password");
     }
 
-    const token = await createToken(
+    console.log("Password verified successfully");
+
+    const token = jwt.sign(
       {
-        id: student.id,
-        studentId: student.studentId,
         username: student.username,
         role: "student" as UserRole,
+        schoolId: student.schoolId,
       },
-      rememberMe
+      Buffer.from(JWT_SECRET),
+      { expiresIn: "24h" }
     );
 
     return {
@@ -422,13 +463,24 @@ export async function loginStudent(formData: FormData): Promise<LoginResponse> {
         name: student.studentName,
         email: student.email,
         username: student.username,
-        role: "student",
+        role: "student" as UserRole,
+        schoolId: student.schoolId,
         dashboardUrl: `/dashboard/stud/${student.studentId}`,
       },
     };
   } catch (error) {
     console.error("Login error:", error);
-    return { error: "Login failed" };
+    return {
+      error: "Login failed",
+      user: {
+        id: "",
+        name: "",
+        username: "",
+        email: "",
+        role: "student",
+        schoolId: "",
+      },
+    };
   }
 }
 
